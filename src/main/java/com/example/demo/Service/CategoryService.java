@@ -1,6 +1,5 @@
 package com.example.demo.Service;
 
-import com.example.demo.Handler.ResourceNotFoundException;
 import com.example.demo.Model.Category;
 import com.example.demo.Repository.CategoryRepository;
 import org.springframework.stereotype.Service;
