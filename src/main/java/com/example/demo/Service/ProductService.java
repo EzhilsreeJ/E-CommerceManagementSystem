@@ -1,7 +1,9 @@
 package com.example.demo.Service;
 
+import com.example.demo.Model.Category;
 import com.example.demo.Model.Product;
 import com.example.demo.Repository.CartRepository;
+import com.example.demo.Repository.CategoryRepository;
 import com.example.demo.Repository.OrdersRepository;
 import com.example.demo.Repository.ProductRepository;
 import jakarta.transaction.Transactional;
@@ -15,18 +17,31 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CartRepository cartRepository;
     private final OrdersRepository ordersRepository;
+    private final CategoryRepository categoryRepository;
 
     // Constructor Injection
-    public ProductService(ProductRepository productRepository, CartRepository cartRepository, OrdersRepository ordersRepository) {
+    public ProductService(ProductRepository productRepository, CartRepository cartRepository, OrdersRepository ordersRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
         this.cartRepository = cartRepository;
         this.ordersRepository = ordersRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     // CREATE
     public Product saveProduct(Product product) {
+
+        if (product.getCategory() != null && product.getCategory().getId() != null) {
+            Category category = categoryRepository
+                    .findById(product.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+
+            product.setCategory(category);
+        }
+
         return productRepository.save(product);
     }
+
+
 
     // READ ALL
     public List<Product> getAllProducts() {
@@ -52,10 +67,21 @@ public class ProductService {
         existing.setStockQuantity(product.getStockQuantity());
         existing.setSku(product.getSku());
         existing.setIsActive(product.getIsActive());
-        existing.setCategory(product.getCategory());
+        existing.setRatingAvg(product.getRatingAvg());      // ✅ ADD
+        existing.setRatingCount(product.getRatingCount()); // ✅ ADD
+
+        // Load full category
+        if (product.getCategory() != null && product.getCategory().getId() != null) {
+            Category category = categoryRepository
+                    .findById(product.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            existing.setCategory(category);
+        }
 
         return productRepository.save(existing);
     }
+
+
 
 
     // DELETE

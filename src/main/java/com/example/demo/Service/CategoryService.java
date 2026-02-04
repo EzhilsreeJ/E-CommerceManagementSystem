@@ -19,9 +19,13 @@ public class CategoryService {
 
     // CREATE
     public Category saveCategory(Category category) {
+        if (category.getParent() != null && category.getParent().getId() != 0) {
+            Category parent = categoryRepository.findById(category.getParent().getId())
+                    .orElseThrow(() -> new RuntimeException("Parent category not found"));
+            category.setParent(parent);
+        }
         return categoryRepository.save(category);
     }
-
     // READ ALL
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
@@ -34,19 +38,24 @@ public class CategoryService {
     }
 
     // UPDATE
-    public Category updateCategory(Category category) {
+    public Category updateCategory(Long id, Category category) {
+        Category existing = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        Category existingCategory = categoryRepository.findById(category.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Category not found with id: " + category.getId()));
+        existing.setName(category.getName());
+        existing.setDescription(category.getDescription());
+        existing.setActive(category.isActive());
 
-        existingCategory.setName(category.getName());
-        existingCategory.setActive(category.isActive());
-        existingCategory.setParent(category.getParent());
+        if (category.getParent() != null && category.getParent().getId() != 0) {
+            Category parent = categoryRepository.findById(category.getParent().getId())
+                    .orElseThrow(() -> new RuntimeException("Parent category not found"));
+            existing.setParent(parent);
+        } else {
+            existing.setParent(null);
+        }
 
-        return categoryRepository.save(existingCategory);
+        return categoryRepository.save(existing);
     }
-
 
     // DELETE
     public void deleteCategory(Long id) {

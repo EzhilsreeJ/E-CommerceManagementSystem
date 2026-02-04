@@ -37,10 +37,11 @@ public class CategoryController {
 
     // UPDATE
     @PutMapping("/{id}")
-    public Category updateCategory(@PathVariable Long id, @RequestBody Category category) {
-        category.setId(id);
-        return categoryService.updateCategory(category);
+    public Category updateCategory(@PathVariable Long id,
+                                   @RequestBody Category category) {
+        return categoryService.updateCategory(id, category);
     }
+
 
 
     // DELETE

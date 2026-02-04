@@ -3,8 +3,10 @@ package com.example.demo.Service;
 import com.example.demo.Handler.BadRequestException;
 import com.example.demo.Model.Cart;
 import com.example.demo.Model.Product;
+import com.example.demo.Model.Users;
 import com.example.demo.Repository.CartRepository;
 import com.example.demo.Repository.ProductRepository;
+import com.example.demo.Repository.UsersRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,10 +18,12 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
+    private final UsersRepository usersRepository;
     // Constructor injection
-    public CartService(CartRepository cartRepository,ProductRepository productRepository) {
+    public CartService(CartRepository cartRepository,ProductRepository productRepository,UsersRepository usersRepository) {
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
+        this.usersRepository = usersRepository;
     }
 
     // CREATE
@@ -32,6 +36,11 @@ public class CartService {
         Long userId = cart.getUsers().getId();
         Long productId = cart.getProduct().getId();
 
+        // ✅ LOAD FULL USER
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // ✅ LOAD FULL PRODUCT
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
@@ -40,22 +49,19 @@ public class CartService {
 
         if (existingCart.isPresent()) {
             Cart oldCart = existingCart.get();
-
             oldCart.setQuantity(oldCart.getQuantity() + cart.getQuantity());
-
-            // ✅ FIX: set addedAt if missing
-            if (oldCart.getAddedAt() == null) {
-                oldCart.setAddedAt(LocalDateTime.now());
-            }
-
             oldCart.setUpdatedAt(LocalDateTime.now());
             return cartRepository.save(oldCart);
         }
 
         // 🆕 new insert
+        cart.setUsers(user);          // ✅ FULL USER
+        cart.setProduct(product);    // ✅ FULL PRODUCT
         cart.setPriceAtAdded(product.getPrice());
+
         return cartRepository.save(cart);
     }
+
 
 
 

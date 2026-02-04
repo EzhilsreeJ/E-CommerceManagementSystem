@@ -59,19 +59,37 @@ public class OrdersService {
 
     // UPDATE
     public Orders updateOrder(Orders order) {
+
         Orders existingOrder = ordersRepository.findById(order.getId())
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + order.getId()));
 
-        existingOrder.setOrderGroupId(order.getOrderGroupId());
+        // ✅ Load full User
+        Users user = usersRepository.findById(order.getUsers().getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // ✅ Load full Product
+        Product product = productRepository.findById(order.getProduct().getId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        existingOrder.setUsers(user);
+        existingOrder.setProduct(product);
+
         existingOrder.setQuantity(order.getQuantity());
         existingOrder.setPrice(order.getPrice());
         existingOrder.setOrderStatus(order.getOrderStatus());
-        existingOrder.setIsReviewed(order.getIsReviewed());
-        existingOrder.setUsers(order.getUsers());
-        existingOrder.setProduct(order.getProduct());
+
+        // preserve existing values if not sent
+        if (order.getOrderGroupId() != null) {
+            existingOrder.setOrderGroupId(order.getOrderGroupId());
+        }
+
+        if (order.getIsReviewed() != null) {
+            existingOrder.setIsReviewed(order.getIsReviewed());
+        }
 
         return ordersRepository.save(existingOrder);
     }
+
 
     // DELETE
     public void deleteOrder(Long id) {
